@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "UMXvmiJtL9dM/zgNWdQHE47UqfCKp1S16eNO4tUEidzKZvlSOlvXK3cWzktHUHnegcv5fzVYU6nrONXS7a1Pdw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Tommy\\Source\\Repos\\BMRAapp\\BMRAapplication.Core\\BMRAapplication.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Tommy\\.nuget\\packages\\newtonsoft.json\\13.0.2\\newtonsoft.json.13.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
