@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\cert_mailer"
   ],
-  "SelectedNode": "\\C:\\Users\\Tommy\\Source\\Repos\\BMRAapp",
+  "SelectedNode": "\\cert_mailer\\cert_mailer.sln",
   "PreviewInSolutionExplorer": false
 }
