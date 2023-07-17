@@ -200,9 +200,10 @@ public sealed partial class MailerPage : Page
                 EnumCertificateType.CertificateType certificateType = EnumCertificateType.CertificateType.Default;
                 ProgressBar.Visibility = 0;
                 ProgressBar.Value = 5;
+                ComboBoxItem selectedComboBoxItem = CertificatesComboBox.SelectedItem as ComboBoxItem;
                 if ((bool)CreateCertificatesCheckBox.IsChecked)
                 {
-                    var certType = CertificatesComboBox.SelectedItem;
+                    var certType = selectedComboBoxItem.Content.ToString();
                     switch (certType)
                     {
                         case "Default Certificate":
