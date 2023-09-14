@@ -1,0 +1,4 @@
+*.msix
+*.msi
+**/bin/
+.vs/

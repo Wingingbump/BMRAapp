@@ -72,6 +72,8 @@ public partial class App : Application
             services.AddTransient<EvaluationViewModel>();
             services.AddTransient<EvaluationPage>();
             services.AddTransient<MailerViewModel>();
+            services.AddTransient<ScoreDistributionViewModel>();
+            services.AddTransient<ScoreDistributionPage>();
             services.AddTransient<MailerPage>();
             services.AddTransient<ShellPage>();
             services.AddTransient<ShellViewModel>();

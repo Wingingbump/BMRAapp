@@ -10,3 +10,15 @@ C:\Users\Tommy\source\repos\Wingingbump\BMRAapplication.Core\obj\x86\Release\net
 C:\Users\Tommy\source\repos\Wingingbump\BMRAapplication.Core\obj\x86\Release\net7.0\refint\BMRAapplication.Core.dll
 C:\Users\Tommy\source\repos\Wingingbump\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.pdb
 C:\Users\Tommy\source\repos\Wingingbump\BMRAapplication.Core\obj\x86\Release\net7.0\ref\BMRAapplication.Core.dll
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\bin\x86\Release\net7.0\BMRAapplication.Core.deps.json
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\bin\x86\Release\net7.0\BMRAapplication.Core.dll
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\bin\x86\Release\net7.0\BMRAapplication.Core.pdb
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.csproj.AssemblyReference.cache
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.AssemblyInfoInputs.cache
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.AssemblyInfo.cs
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.csproj.CoreCompileInputs.cache
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.dll
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\refint\BMRAapplication.Core.dll
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\BMRAapplication.Core.pdb
+C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication.Core\obj\x86\Release\net7.0\ref\BMRAapplication.Core.dll

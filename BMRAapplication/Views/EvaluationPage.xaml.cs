@@ -63,8 +63,9 @@ public sealed partial class EvaluationPage : Page
                     InstructorTextBox.Text,
                     AgencyTextBox.Text,
                     CourseNameTextBox.Text,
-                    AttendanceTextBox.Text);
-                ProgressBar.Value = 0;
+                    AttendanceTextBox.Text,
+                    CourseABVTextBox.Text);
+                ProgressBar.Value = 100;
             }
             catch (Exception ex)
             {

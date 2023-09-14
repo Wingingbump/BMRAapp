@@ -187,7 +187,7 @@ public sealed partial class MailerPage : Page
 
     private void SubmitButton_Click(object sender, RoutedEventArgs e)
     {
-        if (certPath == string.Empty || rosterPath == string.Empty || gradesPath == string.Empty)
+        if (certPath == string.Empty || rosterPath == string.Empty || gradesPath == string.Empty || (CreateEmailsCheckBox.IsChecked == false && CreateCertificatesCheckBox.IsChecked == false))
         {
             ShowErrorDialog("Error: Not all fields filled");
         }
@@ -226,13 +226,16 @@ public sealed partial class MailerPage : Page
                 string courseName = reader.Course.CourseName;
                 string courseId = reader.Course.CourseId;
 
-                foreach (Student student in reader.Course.Students)
+                if (CreateEmailsCheckBox.IsChecked == true)
                 {
-                    if (student.Pass == true)
+                    foreach (Student student in reader.Course.Students)
                     {
-                        EmailBuilder message = new EmailBuilder(student.Email, courseName, courseId, student.Certification);
-                        message.CreateDraft();
-                        ProgressBar.Value += 2;
+                        if (student.Pass == true)
+                        {
+                            EmailBuilder message = new EmailBuilder(student.Email, courseName, courseId, student.Certification, "Certificates");
+                            message.CreateDraft();
+                            ProgressBar.Value += 2;
+                        }
                     }
                 }
                 ProgressBar.Value = 100;

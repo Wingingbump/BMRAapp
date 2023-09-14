@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_LastSelectedProfileId>C:\Users\Tommy\Source\Repos\BMRAapp\BMRAapplication\Properties\PublishProfiles\win10-x86.pubxml</_LastSelectedProfileId>
+    <ActiveDebugProfile>BMRAapplication (Package)</ActiveDebugProfile>
+    <SplashScreenSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</SplashScreenSource>
+    <Source>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</Source>
+    <SmallTileSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</SmallTileSource>
+    <MediumTileSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</MediumTileSource>
+    <WideTileSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</WideTileSource>
+    <LargeTileSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</LargeTileSource>
+    <AppIconSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</AppIconSource>
+    <PackageLogoSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</PackageLogoSource>
+    <BadgeLogoSource>C:\Users\Tommy\Pictures\Abstract-Logo-Mark-Original.png</BadgeLogoSource>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <ItemGroup>
+    <Page Update="Views\ScoreDistributionPage.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>

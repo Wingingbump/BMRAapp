@@ -16,6 +16,7 @@ public class PageService : IPageService
     {
         Configure<MailerViewModel, MailerPage>();
         Configure<EvaluationViewModel, EvaluationPage>();
+        Configure<ScoreDistributionViewModel, ScoreDistributionPage>();
     }
 
     public Type GetPageType(string key)

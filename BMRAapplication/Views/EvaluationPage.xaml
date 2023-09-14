@@ -28,7 +28,7 @@
                 <Grid.Background>
                     <SolidColorBrush Color="LightGray"/>
                 </Grid.Background>
-                <TextBlock x:Name="EOC" Text="Drag and Drop Evaluation" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
+                <TextBlock x:Name="EOC" Text="Drag and Drop EOC Location" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
             </Grid>
         </StackPanel>
 
@@ -50,6 +50,7 @@
                     <!-- Add Items to Dropdown List -->
                     <ComboBoxItem Content="Default" IsSelected="True" />
                     <ComboBoxItem Content="LMS"/>
+                    <ComboBoxItem Content="DISA"/>
                 </ComboBox>
             </StackPanel>
         </Grid>
@@ -77,7 +78,7 @@
             <Rectangle Fill="LightGray" RadiusX="5" RadiusY="5"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,5,0">
                 <TextBlock Text="Instructor" Margin="10"/>
-                <TextBox x:Name="InstructorTextBox" PlaceholderText="Enter Instructor" Margin="10,5,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+                <TextBox x:Name="InstructorTextBox" PlaceholderText="Enter Instructor eg: J. Johnson" Margin="10,5,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
             </StackPanel>
         </Grid>
 
@@ -98,12 +99,21 @@
                 <TextBox x:Name="CourseNameTextBox" PlaceholderText="Enter Course Name" Margin="10,5,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
             </StackPanel>
         </Grid>
+        
+        <!-- Course ABV Label and Text Box -->
+        <Grid Margin="140,426,0,0" VerticalAlignment="Top" HorizontalAlignment="Center">
+            <Rectangle Fill="LightGray" RadiusX="5" RadiusY="5"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,5,0">
+                <TextBlock Text="Course Abbreviation" Margin="10"/>
+                <TextBox x:Name="CourseABVTextBox" PlaceholderText="Enter Course Abbreviation" Margin="10,5,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"/>
+            </StackPanel>
+        </Grid>
 
-        <!-- Course Name Label and Text Box -->
+        <!-- Attendance and Text Box -->
         <Grid Margin="21,476,0,0" VerticalAlignment="Top" HorizontalAlignment="Left">
             <Rectangle Fill="LightGray" RadiusX="5" RadiusY="5"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,5,0">
-                <TextBlock Text="Attendance" Margin="10"/>
+                <TextBlock Text="Course Attendance" Margin="10"/>
                 <TextBox x:Name="AttendanceTextBox" PlaceholderText="Enter Attendance" Margin="10,5,0,0" VerticalAlignment="Top" HorizontalAlignment="Stretch" TextChanged="MinimumGradeTextBox_TextChanged" KeyDown="MinimumGradeTextBox_KeyDown"/>
             </StackPanel>
         </Grid>
