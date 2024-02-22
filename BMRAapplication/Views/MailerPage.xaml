@@ -54,7 +54,7 @@
                 <ComboBoxItem Content="NOAA Certificate"/>
                 <ComboBoxItem Content="DOIU Certificate"/>
             </ComboBox>
-            <CheckBox x:Name="AddCLUCheckBox" Content="Add CLUs"/>
+            <CheckBox x:Name="AddCLUCheckBox" Content="Add PDUs"/>
             <CheckBox x:Name="CreateEmailsCheckBox" Content="Create Emails"/>
             <TextBlock Text="Minimum Grade:" Margin="10,-4,5,0" VerticalAlignment="Center"/>
             <TextBox x:Name="MinimumGradeTextBox" Text="80" Width="60" Margin="0,0,10,0" Height="10" TextChanged="MinimumGradeTextBox_TextChanged" KeyDown="MinimumGradeTextBox_KeyDown"/>
