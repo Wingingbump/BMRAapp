@@ -221,7 +221,7 @@ public sealed partial class MailerPage : Page
                     }
                 }
                 var minimumGrade = int.Parse(MinimumGradeTextBox.Text);
-                DataRead reader = new DataRead(rosterInfo, gradesInfo, certPath, (bool)CreateCertificatesCheckBox.IsChecked, certificateType, (int)minimumGrade);
+                DataRead reader = new DataRead(rosterInfo, gradesInfo, certPath, (bool)CreateCertificatesCheckBox.IsChecked, certificateType, (int)minimumGrade, (bool)AddCLUCheckBox.IsChecked);
                 ProgressBar.Value = 10;
                 string courseName = reader.Course.CourseName;
                 string courseId = reader.Course.CourseId;

@@ -46,7 +46,7 @@
         </StackPanel>
 
         <!-- Dropdown and Checkbox -->
-        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="33,99,0,0">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="15,99,0,0">
             <CheckBox x:Name="CreateCertificatesCheckBox" Content="Create Certificates" Checked="CreateCertificatesCheckBox_Checked" Unchecked="CreateCertificatesCheckBox_Unchecked"/>
             <ComboBox x:Name="CertificatesComboBox" IsEnabled="False" Margin="10" SelectedIndex="0">
                 <ComboBoxItem Content="Default Certificate"/>
@@ -54,11 +54,11 @@
                 <ComboBoxItem Content="NOAA Certificate"/>
                 <ComboBoxItem Content="DOIU Certificate"/>
             </ComboBox>
+            <CheckBox x:Name="AddCLUCheckBox" Content="Add CLUs"/>
             <CheckBox x:Name="CreateEmailsCheckBox" Content="Create Emails"/>
             <TextBlock Text="Minimum Grade:" Margin="10,-4,5,0" VerticalAlignment="Center"/>
             <TextBox x:Name="MinimumGradeTextBox" Text="80" Width="60" Margin="0,0,10,0" Height="10" TextChanged="MinimumGradeTextBox_TextChanged" KeyDown="MinimumGradeTextBox_KeyDown"/>
         </StackPanel>
-
         <!-- Submit -->
         <ProgressBar x:Name="ProgressBar" Width="200" Height="10" VerticalAlignment="Top" Minimum="0" Maximum="100" Value="0" Visibility="Collapsed" Margin="130,190,0,0" HorizontalAlignment="Left"/>
         <Button x:Name="SubmitButton" Content="Submit" Click="SubmitButton_Click" Margin="33,182,0,0" VerticalAlignment="Top"/>
