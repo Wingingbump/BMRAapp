@@ -51,6 +51,7 @@
                     <ComboBoxItem Content="Default" IsSelected="True" />
                     <ComboBoxItem Content="LMS"/>
                     <ComboBoxItem Content="DISA"/>
+                    <ComboBoxItem Content="SalesForce"/>
                 </ComboBox>
             </StackPanel>
         </Grid>
