@@ -14,6 +14,8 @@
 # Ignore build directories
 bin/
 obj/
+/BMRAapplication.Core/bin/
+
 
 # Ignore packages
 packages/
