@@ -2,3 +2,4 @@
 *.msi
 **/bin/
 .vs/
+/BMRAapplication/BMRAapplication.csproj
