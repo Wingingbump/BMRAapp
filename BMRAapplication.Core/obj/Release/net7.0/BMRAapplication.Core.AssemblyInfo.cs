@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f11734440065321ee3688ef647a220b42c3ee4b")]
 [assembly: System.Reflection.AssemblyProductAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

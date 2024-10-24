@@ -19,7 +19,7 @@ public class DataRead
     private readonly int minimumPassingGrade;
     public Course Course { get; }
 
-    public DataRead(FileInfo roster, FileInfo grades, string certPath, bool createCerts, EnumCertificateType.CertificateType certificateType, int minimumPassingGrade)
+    public DataRead(FileInfo roster, FileInfo grades, string certPath, bool createCerts, EnumCertificateType.CertificateType certificateType, int minimumPassingGrade, bool addClu)
     {
         // Set CertPath
         this.certPath = certPath;
@@ -77,7 +77,7 @@ public class DataRead
         // If the certs aren't created create them
         if (createCerts == true)
         {
-            CertificateCreator creator = new CertificateCreator(gradesSheet, certPath, Course, certificateType);
+            CertificateCreator creator = new CertificateCreator(gradesSheet, certPath, Course, certificateType, addClu);
             // Add the cert to each student
             var numStudents = Course.Students.Count;
             for (var i = 0; i < numStudents; i++)
@@ -91,6 +91,16 @@ public class DataRead
         }
     }
 
+    /*
+   * Reads student data from Excel worksheets and processes them accordingly.
+   * Read data from the rosterSheet and gradesSheet cross-referencing to ensure sync'd info.
+   * Adds all students who completed the course (pass or fail) to the course's student list
+   * 
+   * @param rosterSheet The Excel worksheet containing roster information.
+   * @param gradesSheet The Excel worksheet containing student grades.
+   * @param rosterType An integer representing the type of roster (1: BMRA, 2: VA, 3: DISA, 4: VA CPS).
+   * @param createCerts A boolean indicating whether certificates need to be created.
+   */
     public void StudentReader(ExcelWorksheet rosterSheet, ExcelWorksheet gradesSheet, int rosterType, bool createCerts)
     {
         // Compare the data in each row
@@ -103,11 +113,6 @@ public class DataRead
             var gradeSpacing = row + GRADESPACE;
             var gradesGrade = gradesSheet.Cells[gradeSpacing + gradeSkip, 6].Value?.ToString();
             if (certPath.Equals("SD") && gradesGrade != null) {
-                gradesGrade = gradesSheet.Cells[gradeSpacing + gradeSkip, 6].Value?.ToString();
-            }
-            else if (gradesGrade != null && !GradeCheck(gradesGrade))
-            {
-                gradeSkip++;
                 gradesGrade = gradesSheet.Cells[gradeSpacing + gradeSkip, 6].Value?.ToString();
             }
 
@@ -123,16 +128,65 @@ public class DataRead
             if (rosterType == 1)
             {
                 var rosterSpacing = row + BMRAROSTERSPACE;
-                rosterFirstName = rosterSheet.Cells[rosterSpacing, 2].Value?.ToString();
-                rosterLastName = rosterSheet.Cells[rosterSpacing, 3].Value?.ToString();
-                rosterEmail = rosterSheet.Cells[rosterSpacing, 4].Value?.ToString();
+
+                // Calculate the duration of the course and loop
+                DateTime courseStart = Course.StartDate;
+                DateTime courseEnd = Course.EndDate;
+                int dateRange = (courseEnd - courseStart).Days + 1;
+                DayOfWeek startDayOfWeek = courseStart.DayOfWeek;
+                // Map the days to their corresponding values.
+                int dayValue;
+                //bool absent = false;
+
+                // Switch statement to determine cell spacing for starting day
+                switch (startDayOfWeek)
+                {
+                    case DayOfWeek.Monday:
+                        dayValue = 5;
+                        break;
+                    case DayOfWeek.Tuesday:
+                        dayValue = 7;
+                        break;
+                    case DayOfWeek.Wednesday:
+                        dayValue = 9;
+                        break;
+                    case DayOfWeek.Thursday:
+                        dayValue = 11;
+                        break;
+                    case DayOfWeek.Friday:
+                        dayValue = 13;
+                        break;
+                    default:
+                        throw new InvalidOperationException("The date falls outside the Monday to Friday range.");
+                }
+
+                // Loop through each day
+                for (int date = 0; date < dateRange*2; date+=2)
+                {
+                    // If a student is absent for a day skip them.
+                    var cell = rosterSheet.Cells[rosterSpacing + skip, date + dayValue];
+                    var cellColor = cell.Style.Fill.BackgroundColor.Rgb;
+                    // Check if the color is not null and is red
+                    if (!string.IsNullOrEmpty(cellColor) && cellColor.Equals("FFFF0000", StringComparison.OrdinalIgnoreCase))
+                    {
+                        //absent = true;
+                        skip++;
+                        date = 0;
+                    }
+                }
+
+                rosterFirstName = rosterSheet.Cells[rosterSpacing + skip, 2].Value?.ToString();
+                rosterLastName = rosterSheet.Cells[rosterSpacing + skip, 3].Value?.ToString();
+                rosterEmail = rosterSheet.Cells[rosterSpacing + skip, 4].Value?.ToString();
+
+
             }
             // VA roster
             else if (rosterType == 2)
             {
                 var rosterSpacing = row + GRADESPACE; // Use GRADESPACE since it's only skipping the header
                 var rosterPass = rosterSheet.Cells[rosterSpacing + skip, 7].Value?.ToString();
-                while (rosterPass == "N")
+                while (rosterPass == "N" && rosterSheet.Cells[rosterSpacing + skip, 8].Value?.ToString() == "N")
                 {
                     skip++;
                     rosterPass = rosterSheet.Cells[rosterSpacing + skip, 7].Value?.ToString();
@@ -141,14 +195,14 @@ public class DataRead
                 rosterLastName = rosterSheet.Cells[rosterSpacing + skip, 1].Value?.ToString();
                 rosterEmail = rosterSheet.Cells[rosterSpacing + skip, 3].Value?.ToString();
             }
-            else if (rosterType == 3)
+            else if (rosterType == 3) // DISA
             {
                 var rosterSpacing = row + BMRAROSTERSPACE + 2;
                 rosterFirstName = rosterSheet.Cells[rosterSpacing, 2].Value?.ToString();
                 rosterLastName = rosterSheet.Cells[rosterSpacing, 3].Value?.ToString();
                 rosterEmail = rosterSheet.Cells[rosterSpacing, 4].Value?.ToString();
             }
-            if (rosterType == 4)
+            if (rosterType == 4) // VA CPS
             {
                 var rosterSpacing = row + GRADESPACE + 1; // Use GRADESPACE + 1 since it's only skipping the header
                 rosterFirstName = rosterSheet.Cells[rosterSpacing + skip, 3].Value?.ToString();
@@ -287,7 +341,13 @@ public class DataRead
 
     private static int IsBMRARoster(ExcelPackage rosterExcel)
     {
-        var worksheet = rosterExcel.Workbook.Worksheets[0]; // get the first worksheet
+        // var worksheet = rosterExcel.Workbook.Worksheets[0]; // get the first worksheet
+        var worksheet = rosterExcel.Workbook.Worksheets.FirstOrDefault(sheet => sheet.Name.Contains("EOC"));
+        // if not EOC Page
+        if (worksheet == null)
+        {
+            worksheet = rosterExcel.Workbook.Worksheets[0]; // get the first worksheet
+        }
         var cell = worksheet.Cells["A1"]; // get the cell A1
         var value = cell.Value; // get the value of the cell A1
         var a1Data = value?.ToString() ?? "null";

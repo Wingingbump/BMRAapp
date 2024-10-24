@@ -1,9 +1,13 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Presentation;
 using DocumentFormat.OpenXml.Wordprocessing;
+using iText.Layout.Properties;
 using OfficeOpenXml;
 using System.Text.RegularExpressions;
+using Windows.Graphics.Printing3D;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using BottomBorder = DocumentFormat.OpenXml.Wordprocessing.BottomBorder;
 using InsideHorizontalBorder = DocumentFormat.OpenXml.Wordprocessing.InsideHorizontalBorder;
 using InsideVerticalBorder = DocumentFormat.OpenXml.Wordprocessing.InsideVerticalBorder;
@@ -62,6 +66,16 @@ public class Evaluations
         get; set;
     }
 
+
+    // Create a HashSet to store the responses to omit with case-insensitive matching
+    readonly HashSet<string> omittedResponses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "None", "NA", "N/A", "No", "No Response", "Not Applicable", "Not at this time",
+        "Not Relevant", "No Answer", "Nil", "None Provided", "Unavailable",
+        "No Comment", "Not Provided", "Decline to Answer", "Declined", "No Input"
+    };
+
+
     public Evaluations(FileInfo evaluation, string EOCpath, string type, string courseCode, DateTime startDate, DateTime endDate, string instructor, string agency, string courseName, string attendance, string courseABV)
     {
         // Load the evaluation file and get the first worksheet.
@@ -81,10 +95,19 @@ public class Evaluations
         // If the worksheet exists, read the evaluations.
         if (evalSheet != null)
         {
-            evalReader(evalSheet);
+            if (type.Equals("SalesForce"))
+            {
+                SFevalReader(evaluationExcel);
+            }
+            else
+            {
+                evalReader(evalSheet);
+            }
         }
 
     }
+
+    // I suck at coding lmao this should return a struct with both dicts then pass it to the next function but i'm lazy
     public void evalReader(ExcelWorksheet evalSheet)
     {
         int rowCount = evalSheet.Dimension.Rows;
@@ -121,7 +144,7 @@ public class Evaluations
             questionRatingCounts.Add("Question11", new int[5]);
             questionRatingCounts.Add("Question14", new int[5]);
             questionRatingCounts.Add("Question15", new int[5]);
-            questionRatingCounts.Add("Question16", new int[5]);
+            questionRatingCounts.Add("Question16", new int[5]); // 13 questions
         }
 
         // Initialize comment count
@@ -140,7 +163,7 @@ public class Evaluations
             buffer2 = 5;
         }
 
-        for (var row = 2; row <= rowCount; row++)
+        for (int row = 2; row <= rowCount; row++)
         {
             // Yes/No questions
             // Count the "Yes" and "No" responses separately
@@ -189,18 +212,6 @@ public class Evaluations
             userResponse[1] = evalSheet.Cells[row, 13 + buffer].Value?.ToString() ?? "";
             userResponse[2] = evalSheet.Cells[row, 18 + buffer].Value?.ToString() ?? "";
             userResponse[3] = evalSheet.Cells[row, 19 + buffer2].Value?.ToString() ?? ""; // Additional buffer for Default evaluations
-
-            // Create a HashSet to store the responses to omit with case-insensitive matching
-            HashSet<string> omittedResponses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "None",
-                "NA",
-                "N/A",
-                "No",
-                "No Response",
-                "Not Applicable",
-                "Not at this time"
-            };
 
             // Update the omitted responses to blanks
             for (int i = 0; i < userResponse.Length; i++)
@@ -345,12 +356,30 @@ public class Evaluations
         // Replace "Sep." with "Sept."
         dateRange = dateRange.Replace("Sep.", "Sept.");
 
+        // Replace "May." with "May"
+        dateRange = dateRange.Replace("May.", "May");
+
         outputSheet.HeaderFooter.OddHeader.RightAlignedText = $"BMRA Ref: {courseCode} \r\n DATE: {dateRange}";
 
         // Footer for Evaluation Summary
         outputSheet.HeaderFooter.OddFooter.LeftAlignedText = $"Name of course: {courseABV}";
         outputSheet.HeaderFooter.OddFooter.CenteredText = $"{agency} - Virtual";
         outputSheet.HeaderFooter.OddFooter.RightAlignedText = $"Instructor: {instructor}";
+
+        // Update basic info on the calcs sheet
+        outputSheet = outputPath.Workbook.Worksheets["calcs"];
+
+        outputSheet.Cells["A3"].Value = courseCode; // Course ID
+
+        outputSheet.Cells["C3"].Value = courseABV + " " + agency; // Course Name + Agency
+
+        outputSheet.Cells["D3"].Value = dateRange; // Date
+
+        outputSheet.Cells["A9"].Value = courseCode; // Course ID
+
+        outputSheet.Cells["C9"].Value = courseABV + " " + agency; // Course Name + Agency
+
+        outputSheet.Cells["D9"].Value = dateRange; // Date
 
 
         // Save the file
@@ -460,6 +489,446 @@ public class Evaluations
         commentOutputPath.Save();
     }
 
+    public void SFevalReader(ExcelPackage evaluationExcel)
+    {
+        var currSheet = evaluationExcel.Workbook.Worksheets.First(); // Current sheet
+        const int startingCol = 4; // First question
+
+        // Data structure to hold question data
+
+        /**
+         * Index 0 for "No", Index 1 for "Yes"
+         * Index 0 for "Poor", Index 4 for "Excellent"
+         * Index 0 for "Not Recommend", Index 1 for "Recommend"
+         * 13 questions
+         */
+
+        // Define a dictionary with question names and their respective array sizes
+        var questions = new Dictionary<string, int[]>
+        {
+            { "Question1", new int[2] }, // 1. Did this course meet its stated learning objectives?
+            { "Question2", new int[2] }, // 2. Did this course meet your personal reasons or objectives for taking this course?
+            { "Question3", new int[5] }, // 3. What would you rate this course overall?
+            { "Question4", new int[5] }, // 4. What would you rate this instructor overall?
+            { "Question5", new int[5] }, // 5. How would you rate the virtual platform?
+            { "Question7", new int[2] }, // 7. How likely are you to recommend a BMRA course to a friend or colleague?
+            { "Question8", new int[5] }, // 8. How well structured/organized was the course material?
+            { "Question9", new int[5] }, // 9. How engaging was the course overall?
+            { "Question10", new int[5] }, // 10. How engaging was the course presentation?
+            { "Question11", new int[5] }, // 11. How helpful were the course exercises?
+            { "Question14", new int[5] }, // 14. How well did the Instructor demonstrate knowledge of the subject?
+            { "Question15", new int[5] }, // 15. How successful was the Instructor in making the virtual course engaging?
+            { "Question16", new int[5] }  // 16. How successfully did the Instructor answer questions?
+        };
+
+        // ==========================
+        // Update the Rating Questions
+        // ==========================
+
+        // Get the rating table start
+        int ratingRow = SearchRating(currSheet); // rating range (poor...) row 
+        int startingRow = ratingRow + 2; // First question 2 rows down
+
+        // Establishes the x range of the 2d question array (Ratings)
+        var ratingPointer = currSheet.Cells[ratingRow, 4].Value.ToString(); // row
+        var ratingRange = new List<int>();
+        var index = 0;
+        while (ratingPointer != "Total")
+        {
+            var ratingNumber = int.Parse(ratingPointer.Split('-')[0]);
+            ratingRange.Add(ratingNumber);
+            index++;
+            ratingPointer = currSheet.Cells[ratingRow, 4 + index].Value.ToString();
+        }
+
+        // Establishes the y range of the 2d question array (Questions)
+        var ratingQuestionRows = 10 + startingRow; // all rating questions
+        var ratingCountRange = ratingRange.Count(); // Numeric Range Max
+        int[] skipQuestions = {6, 7, 12, 13};
+        var questionBuffer = 3;
+        for (var row = startingRow ; row < ratingQuestionRows; row++)
+        {
+            while (skipQuestions.Contains(questionBuffer))
+            {
+                questionBuffer++;
+            }
+            for (var col = startingCol; col < ratingCountRange + startingCol; col++)
+            {
+                var questionNumber = "Question" + (questionBuffer);
+                int intRating = currSheet.Cells[row, col].Value is double doubleValue ? (int)doubleValue : int.Parse(currSheet.Cells[row, col].Value.ToString());
+                questions[questionNumber][ratingRange[col - startingCol]-1] = intRating;
+            }
+            questionBuffer++;
+        }
+
+        // ==========================
+        // Update the Yes/No Questions
+        // ==========================
+        currSheet = evaluationExcel.Workbook.Worksheets[1]; // Yes/No
+
+        // Get the y/n table start
+        ratingRow = SearchRating(currSheet); // y/n row 
+        startingRow = ratingRow + 2; // First question 2 rows down
+
+        // Establishes the x range of the 2d question array (Ratings)
+        ratingPointer = currSheet.Cells[ratingRow, 4].Value.ToString(); // row
+        ratingRange = new List<int>();
+        index = 0;
+        while (ratingPointer != "Total")
+        {
+            var ratingNumber = ratingPointer == "NO" ? 0 : 1;
+            ratingRange.Add(ratingNumber);
+            index++;
+            ratingPointer = currSheet.Cells[ratingRow, 4 + index].Value.ToString();
+        }
+
+        // Establishes the y range of the 2d question array (Questions)
+        ratingQuestionRows = 2 + startingRow; // all rating questions
+        ratingCountRange = ratingRange.Count(); // Numeric Range Max
+        questionBuffer = 1;
+        for (var row = startingRow; row < ratingQuestionRows; row++)
+        {
+            for (var col = startingCol; col < ratingCountRange + startingCol; col++)
+            {
+                var questionNumber = "Question" + (questionBuffer);
+                int intRating = currSheet.Cells[row, col].Value is double doubleValue ? (int)doubleValue : int.Parse(currSheet.Cells[row, col].Value.ToString());
+                questions[questionNumber][ratingRange[col - startingCol]] = intRating;
+            }
+            questionBuffer++;
+        }
+
+        // ==========================
+        // Update the NPS Questions
+        // ==========================
+        currSheet = evaluationExcel.Workbook.Worksheets[2];
+
+        // Get the NPS table start
+        ratingRow = SearchRating(currSheet); // NPS row 
+        startingRow = ratingRow + 2; // First question 2 rows down
+
+        // Establishes the x range of the 2d question array (Ratings)
+        ratingPointer = currSheet.Cells[ratingRow, 4].Value.ToString(); // row
+        ratingRange = new List<int>();
+        index = 0;
+        while (ratingPointer != "Total")
+        {
+            var ratingNumber = ratingPointer == "Not at all Likely" ? 0 : 1;
+            ratingRange.Add(ratingNumber);
+            index++;
+            ratingPointer = currSheet.Cells[ratingRow, 4 + index].Value.ToString();
+        }
+
+        // Establishes the y range of the 2d question array (Questions)
+        ratingCountRange = ratingRange.Count(); // Numeric Range Max
+        for (var col = startingCol; col < ratingCountRange + startingCol; col++)
+        {
+            int intRating = currSheet.Cells[startingRow, col].Value is double doubleValue ? (int)doubleValue : int.Parse(currSheet.Cells[startingRow, col].Value.ToString());
+            questions["Question7"][ratingRange[col - startingCol]] = intRating;
+        }
+
+        //PrintQuestionDictionary(questions);
+
+        // ==========================
+        // Update the Comments
+        // ==========================
+        currSheet = evaluationExcel.Workbook.Worksheets[3];
+
+        var comments = new Dictionary<string, List<string>>()
+        {
+            { "Question1", new List<string>() }, // 1. Do you have any feedback about the virtual platform?
+            { "Question2", new List<string>() }, // 2. Any comments about the course materials, presentation, or exercises?
+            { "Question3", new List<string>() }, // 3. Do you have any comments about the Instructor?
+            { "Question4", new List<string>() } // 4. Anything else you'd like to tell us?
+        };
+
+        // Get the comments table start
+        ratingRow = SearchComment(currSheet); // NPS row 
+        startingRow = ratingRow + 1; // First question 1 row down
+
+        var commentQuestionCol = 3;
+        var commentAnswerCol = 5;
+
+        questionBuffer = 0;
+        var currRow = startingRow;
+        // While Comments are in the comment col
+        while (currSheet.Cells[currRow, commentAnswerCol].Value != null)
+        {
+            // If A new question comes up then switch to next question
+            if (currSheet.Cells[currRow, commentQuestionCol].Value != null)
+            {
+                questionBuffer++;
+            }
+            var questionNumber = "Question" + (questionBuffer);
+            comments[questionNumber].Add(currSheet.Cells[currRow, commentAnswerCol].Value.ToString());
+            currRow++;
+        }
+
+        // Remove ommited Responses from the dict
+        foreach (var key in comments.Keys.ToList()) // Use ToList() to avoid modifying the collection while iterating
+        {
+            comments[key].RemoveAll(comment => omittedResponses.Contains(comment));
+        }
+
+        //PrintSFComments(comments);
+        CreateEvaluationTemplateSF(questions, comments);
+
+
+    }
+
+    public void CreateEvaluationTemplateSF(Dictionary<string, int[]> questions, Dictionary<string, List<string>> comments)
+    {
+        // ==========================
+        // Eval Sheet
+        // ==========================
+
+        // This section is same as the non SF verion
+        var Buffer = 12;
+        // Combine path with file name
+        string output = System.IO.Path.Combine(path, "Course Evaluation Summary - " + courseCode + ".xlsx");
+        // Get template file path
+        string templatePath = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath + "\\Assets", "Course Evaluation Summary - Template.xlsx");
+        // Copy the template file to the output path
+        System.IO.File.Copy(templatePath, output, true);
+        // Open the copied file for editing
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        using var outputPath = new ExcelPackage(new FileInfo(output));
+
+        // Get the first sheet
+        ExcelWorksheet outputSheet = outputPath.Workbook.Worksheets.FirstOrDefault();
+        int[] questionOrder = new int[] { 11, 8, 10, 9, 3, 14, 15, 16, 4, 5 };
+        int skip = 0;
+        for (int items = 6; items <= 17; items++)
+        {
+            if (items == 11 || items == 16)
+            {
+                skip++;
+                items++;
+            }
+            for (int col = 8; col <= Buffer; col++)
+            {
+                int reversedIndex = Buffer - col; // Calculate the reversed index
+                if (questions["Question" + questionOrder[items - 6 - skip]][reversedIndex] == 0)
+                {
+                    outputSheet.Cells[items, col].Value = "";
+                }
+                else
+                {
+                    outputSheet.Cells[items, col].Value = questions["Question" + questionOrder[items - 6 - skip]][reversedIndex];
+                }
+            }
+        }
+
+        // Yes/No questions
+        int[] yesNo = new int[] { 9, 11 };
+        int[] yesNoQuestions = new int[] { 2, 3, 19 };
+
+        for (int rowIndex = 0; rowIndex < yesNoQuestions.Length; rowIndex++)
+        {
+            for (int colIndex = 0; colIndex < yesNo.Length; colIndex++)
+            {
+                int reversedColIndex = yesNo.Length - 1 - colIndex; // Calculate the reversed column index
+                if (rowIndex < 2)
+                {
+                    if (questions["Question" + (rowIndex + 1)][reversedColIndex] == 0)
+                    {
+                        outputSheet.Cells[yesNoQuestions[rowIndex], yesNo[colIndex]].Value = "";
+                    }
+                    else
+                    {
+                        outputSheet.Cells[yesNoQuestions[rowIndex], yesNo[colIndex]].Value = questions["Question" + (rowIndex + 1)][reversedColIndex];
+                    }
+                }
+                else
+                {
+                    if (questions["Question" + (7)][reversedColIndex] == 0)
+                    {
+                        outputSheet.Cells[yesNoQuestions[rowIndex], yesNo[colIndex]].Value = "";
+                    }
+                    else
+                    {
+                        outputSheet.Cells[yesNoQuestions[rowIndex], yesNo[colIndex]].Value = questions["Question" + (7)][reversedColIndex];
+                    }
+                }
+            }
+        }
+
+        // Fill out the response amount
+        outputSheet.Cells[21, 13].Value = attendance;
+        outputSheet.Cells[22, 13].Value = questions["Question1"].Sum();
+        outputSheet.Cells[23, 13].Value = comments.Count;
+
+        // Header for Evaluation Summary
+        string dateRange;
+        if (startDate.Date == endDate.Date)
+        {
+            // Same day
+            dateRange = startDate.ToString("MMM. d, yyyy");
+        }
+        else if (startDate.Month == endDate.Month && startDate.Year == endDate.Year)
+        {
+            // Same month and year
+            dateRange = startDate.ToString("MMM. d") + " - " + endDate.ToString("d, yyyy");
+        }
+        else if (startDate.Year == endDate.Year)
+        {
+            // Different months, same year
+            dateRange = startDate.ToString("MMM. d") + " - " + endDate.ToString("MMM. d, yyyy");
+        }
+        else
+        {
+            // Different months and years
+            dateRange = startDate.ToString("MMM. d, yyyy") + " - " + endDate.ToString("MMM. d, yyyy");
+        }
+
+        // Replace "Sep." with "Sept."
+        dateRange = dateRange.Replace("Sep.", "Sept.");
+
+        // Replace "May." with "May"
+        dateRange = dateRange.Replace("May.", "May");
+
+        outputSheet.HeaderFooter.OddHeader.RightAlignedText = $"BMRA Ref: {courseCode} \r\n DATE: {dateRange}";
+
+        // Footer for Evaluation Summary
+        outputSheet.HeaderFooter.OddFooter.LeftAlignedText = $"Name of course: {courseABV}";
+        outputSheet.HeaderFooter.OddFooter.CenteredText = $"{agency} - Virtual";
+        outputSheet.HeaderFooter.OddFooter.RightAlignedText = $"Instructor: {instructor}";
+
+        // Update basic info on the calcs sheet
+        outputSheet = outputPath.Workbook.Worksheets["calcs"];
+
+        outputSheet.Cells["A3"].Value = courseCode; // Course ID
+
+        outputSheet.Cells["C3"].Value = courseABV + " " + agency; // Course Name + Agency
+
+        outputSheet.Cells["D3"].Value = dateRange; // Date
+
+        outputSheet.Cells["A9"].Value = courseCode; // Course ID
+
+        outputSheet.Cells["C9"].Value = courseABV + " " + agency; // Course Name + Agency
+
+        outputSheet.Cells["D9"].Value = dateRange; // Date
+
+
+        // Save the file
+        outputPath.Save();
+
+        // ==========================
+        // Comment Sheet
+        // ==========================
+
+        // Open Comment template
+        string commentTemplatePath = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath + "\\Assets", "Student Comments - Template.docx");
+        // Get output path for comment
+        string commentOutput = System.IO.Path.Combine(path, "Student Comments - " + courseCode + ".docx");
+        // Copy the template file to the output path
+        System.IO.File.Copy(commentTemplatePath, commentOutput, true);
+        // Open the copied file for editing
+        using var commentOutputPath = WordprocessingDocument.Open(commentOutput, true);
+
+        // Retrieve the main document part
+        var commentMainPart = commentOutputPath.MainDocumentPart;
+        // Create a new table
+        var table = new Table();
+
+        // Create table properties
+        var tableProperties = new DocumentFormat.OpenXml.Wordprocessing.TableProperties(
+            new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct }, // Set table width to 100%
+            new TableBorders(
+                new TopBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }, // Top border
+                new BottomBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }, // Bottom border
+                new LeftBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }, // Left border
+                new RightBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }, // Right border
+                new InsideHorizontalBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }, // Inside horizontal border
+                new InsideVerticalBorder() { Val = BorderValues.Single, Size = 6, Color = "000000" }  // Inside vertical border
+            )
+        );
+
+        // Apply the table properties to your table
+        table.AppendChild(tableProperties);
+
+
+        // ==========================
+        // Modified section
+        // ==========================
+
+        var question = 0;
+        string[] questionList = new string[] { "Do you have any feedback about the virtual platform?", "Any comments about the course materials, presentation, or exercises?", "Do you have any comments about the Instructor?", "Anything else you'd like to tell us?" };
+        foreach (var comment in comments)
+        {
+            // Create new row
+            var tr = new TableRow();
+
+            // Edit the content of the new cell 
+            var tc = new TableCell();
+
+            // Create a list to store the generated paragraphs
+            var paragraphs = new List<Paragraph>();
+
+            // Generate the paragraphs for each question and comment
+            var commentParagraphs = CreateParagraphsWithBulletSF(questionList[question], comment.Value);
+
+            // Add each generated paragraph to the main paragraphs list
+            paragraphs.AddRange(commentParagraphs);
+
+
+            // Add the paragraphs to the cell
+            tc.Append(paragraphs);
+            // Add the cell to the row
+            tr.Append(tc);
+            // Add the row to the table
+            table.Append(tr);
+            question++;
+        }
+
+        // Append the table to the document
+        commentMainPart.Document.Body.Append(table);
+
+        // Add the End of student comments bold text
+        commentMainPart.Document.Body.Append(new Paragraph(
+            new Run(new Text("End of student comments."))
+            {
+                RunProperties = new RunProperties(new Bold())
+            }
+        ));
+
+        // Modify the document margins to remove the space at the top
+        var sectionProperties = commentMainPart.Document.Body.Elements<SectionProperties>().FirstOrDefault();
+        if (sectionProperties != null)
+        {
+            var pageMargin = sectionProperties.Elements<PageMargin>().FirstOrDefault();
+            if (pageMargin != null)
+            {
+                pageMargin.Top = 0; // Set the top margin to 0
+            }
+        }
+        var headerPart = commentMainPart.HeaderParts.FirstOrDefault();
+
+        // Check if a header part exists
+        if (headerPart != null)
+        {
+            // Iterate through the paragraphs in the header
+            foreach (var paragraph in headerPart.Header.Descendants<DocumentFormat.OpenXml.Wordprocessing.Paragraph>())
+            {
+                // Iterate through the runs in each paragraph
+                foreach (var run in paragraph.Elements<DocumentFormat.OpenXml.Wordprocessing.Run>())
+                {
+                    // Iterate through the text elements in each run
+                    foreach (var textElement in run.Elements<DocumentFormat.OpenXml.Wordprocessing.Text>())
+                    {
+                        // Replace the specific text with the updated values
+                        textElement.Text = textElement.Text.Replace("CODE", courseCode)
+                                                           .Replace("INSTRUCTOR", instructor)
+                                                           .Replace("COURSE", courseName)
+                                                           .Replace("DATE", dateRange);
+                    }
+                }
+            }
+        }
+
+        // Save the file
+        commentOutputPath.Save();
+    }
+
     // Create a helper method to generate a paragraph with bullet formatting and line spacing
     Paragraph CreateParagraphWithBullet(string question, string comment)
     {
@@ -485,6 +954,51 @@ public class Evaluations
 
         return paragraph;
     }
+
+    // Create a helper method to generate a paragraph with bullet formatting and line spacing for SF Format
+    List<Paragraph> CreateParagraphsWithBulletSF(string question, List<string> comments)
+    {
+        // Create a list to hold the paragraphs
+        var paragraphs = new List<Paragraph>();
+
+        // Create a paragraph for the question without a bullet
+        var questionParagraph = new Paragraph(
+            new DocumentFormat.OpenXml.Wordprocessing.ParagraphProperties(
+                new SpacingBetweenLines() { Line = "360", LineRule = LineSpacingRuleValues.Auto } // Set line spacing to 1.5
+            )
+        );
+        questionParagraph.AppendChild(new Run(new Text(question)));
+        paragraphs.Add(questionParagraph);
+
+        // Create paragraphs for each comment with a bullet
+        foreach (var comment in comments)
+        {
+            var commentParagraph = new Paragraph(
+                new DocumentFormat.OpenXml.Wordprocessing.ParagraphProperties(
+                    new NumberingProperties(
+                        new NumberingLevelReference() { Val = 0 }, // Bullet level
+                        new NumberingId() { Val = 1 }
+                    ),
+                    new SpacingBetweenLines() { Line = "360", LineRule = LineSpacingRuleValues.Auto }
+                )
+            );
+
+            // Add the comment text with italic formatting
+            var commentRun = new Run();
+            commentRun.AppendChild(new RunProperties(new Italic()));
+            commentRun.AppendChild(new Text(comment));
+            commentParagraph.AppendChild(commentRun);
+
+            // Add the comment paragraph to the list of paragraphs
+            paragraphs.Add(commentParagraph);
+        }
+
+        return paragraphs;
+    }
+
+
+
+
 
     private void UpdateRatingCount(int[] ratingCounts, int rating)
     {
@@ -590,5 +1104,90 @@ public class Evaluations
         // Default to 0 if the rating is not found or cannot be parsed
         return 0;
     }
+
+    // SF helper to search for the rating table
+    private int SearchRating(ExcelWorksheet sheet)
+    {
+        // Start at the first row
+        int row = 5;
+        // Maximum number of rows to traverse
+        int maxTraverse = 50;
+
+        // Traverse down column B, up to a maximum of 50 rows
+        while (row <= maxTraverse)
+        {
+            var cellValue = sheet.Cells[row, 2].Value?.ToString();
+
+            // Check if the cell contains the word "Rating", case sensitive
+            if (!string.IsNullOrEmpty(cellValue) && (cellValue.Contains("Rating") || (cellValue.Contains("Choice") && !cellValue.Contains("Value")) || cellValue.Contains("NPS")))
+            {
+                return row;
+            }
+
+            row++;
+        }
+
+        // If "Rating" is not found, return -1 or another appropriate value to indicate failure
+        return -1;
+    }
+
+    // SF helper to search for the Comment table
+    private int SearchComment(ExcelWorksheet sheet)
+    {
+        // Start at the first row
+        int row = 10;
+        // Maximum number of rows to traverse
+        int maxTraverse = 50;
+
+        // Traverse down column B, up to a maximum of 50 rows
+        while (row <= maxTraverse)
+        {
+            var cellValue = sheet.Cells[row, 2].Value?.ToString();
+            var cellValue2 = sheet.Cells[row, 3].Value?.ToString();
+
+            // Check if the cell contains the word "Rating", case sensitive
+            if (!string.IsNullOrEmpty(cellValue) && cellValue.Contains("Class: Class ID") &&
+                !string.IsNullOrEmpty(cellValue2) && cellValue2.Contains("Question: Name"))
+            {
+                return row;
+            }
+
+
+            row++;
+        }
+
+        // If "Rating" is not found, return -1 or another appropriate value to indicate failure
+        return -1;
+    }
+
+    // Helper to print the Question Dict
+    private void PrintQuestionDictionary(Dictionary<string, int[]> questions)
+    {
+        foreach (var question in questions)
+        {
+            Console.Write(question.Key + ": ");
+            foreach (var value in question.Value)
+            {
+                Console.Write(value + " ");
+            }
+            Console.WriteLine();
+        }
+    }
+
+    // Helper to print the Comments Dict SF
+    void PrintSFComments(Dictionary<string, List<string>> comments)
+    {
+        foreach (var question in comments)
+        {
+            Console.WriteLine($"{question.Key}:");
+            foreach (var comment in question.Value)
+            {
+                Console.WriteLine($"- {comment}");
+            }
+            Console.WriteLine();
+        }
+    }
+
+
 
 }

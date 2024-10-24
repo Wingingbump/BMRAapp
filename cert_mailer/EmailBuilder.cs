@@ -81,7 +81,8 @@ public class EmailBuilder
         else
         {
             defaultMessage = "Hello, <br><br>" +
-                 "The score for your Internal Controls for Grants course; BMRA reference number " +
+                 "The score for your " + course +
+                 "; BMRA reference number " +
                  BMRARef +
                  " is " +
                  Grade +
@@ -167,29 +168,26 @@ public class EmailBuilder
 
     private Outlook.Application GetOutlookApplication()
     {
-        Type? outlookType = Type.GetTypeFromProgID("Outlook.Application");
-
-        if (outlookType == null)
+        Type? outlookType;
+        try
         {
-            outlookType = Type.GetTypeFromProgID("Outlook.Application.16");
+            outlookType = Type.GetTypeFromProgID("Outlook.Application", throwOnError: true);
         }
-
-        if (outlookType == null)
+        catch (System.Exception ex)
         {
-            throw new System.Exception("Outlook is not installed on this computer.");
+            throw new System.Exception("Failed to retrieve Outlook application type.", ex);
         }
 
         var outlook = Activator.CreateInstance(outlookType);
-        Outlook.Application? outlookApp = null;
+        Outlook.Application outlookApp;
 
-        if (outlook != null)
+        try
         {
-            outlookApp = outlook as Outlook.Application;
+            outlookApp = (Outlook.Application)outlook;
         }
-
-        if (outlookApp == null)
+        catch (InvalidCastException ex)
         {
-            throw new System.Exception("Failed to create an instance of Outlook application.");
+            throw new InvalidCastException("Failed to cast to Outlook application.", ex);
         }
 
         return outlookApp;

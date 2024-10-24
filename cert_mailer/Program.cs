@@ -15,15 +15,18 @@ namespace cert_mailer
         static void Main()
         {
             //string evalpath = @"F:\Leadership Skills - End of Course Survey.xlsx";
-/*            string evalpath = @"F:\work_project\TestEnv\11023.0001 SBA ICG-EL Virtual - NN\Production\Internal Controls for Grants Course Evaluation - 11023.0001.xlsx";
-            string EOCpath = @"F:\";
-            string type = "Default";
+            //string evalpath = @"F:\BMRA_code\work_project\TestEnv\11023.0001 SBA ICG-EL Virtual - NN\Production\Internal Controls for Grants Course Evaluation - 11023.0001.xlsx";
+/*            string evalpath = @"F:\BMRA_code\work_project\TestEnv\SF Eval Example 2.xlsx";
+            string EOCpath = @"F:\BMRA_code\work_project\TestEnv\test";
+            string type = "SalesForce";
             DateTime startDate = new DateTime(2023, 6, 20);
             DateTime endDate = new DateTime(2023, 6, 23);
             FileInfo evalInfo = new FileInfo(evalpath);
-            Evaluations eval = new Evaluations(evalInfo, EOCpath, type, "11023.0001", startDate, endDate, "J. Beverage", "CDC", "FPM 334");*/
+            var attendance = "10";
+            var courseABV = "TOM";
+            Evaluations eval = new Evaluations(evalInfo, EOCpath, type, "11023.0001", startDate, endDate, "J. Beverage", "CDC", "FPM 334", attendance, courseABV);*/
 
-            /*Stopwatch stopwatch = new Stopwatch();
+/*            Stopwatch stopwatch = new Stopwatch();
 
             stopwatch.Start();
 
@@ -50,13 +53,8 @@ namespace cert_mailer
             }
 
             Console.WriteLine("Elapsed Time is {0} ms", stopwatch.ElapsedMilliseconds);
-            stopwatch.Stop();
+            stopwatch.Stop();*/
 
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CertMailerForm());*/
         }
     }
 }

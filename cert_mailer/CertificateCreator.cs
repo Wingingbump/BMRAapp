@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using iText.Kernel.Pdf;
+using iText.Layout.Properties;
 using OfficeOpenXml;
 using Spire.Doc;
 using System.IO.Compression;
@@ -14,11 +15,14 @@ namespace cert_mailer
         private string certificateName;
         private string certPath;
         private ExcelWorksheet gradeSheet;
+        private bool addClu;
 
-        public CertificateCreator(ExcelWorksheet gradeSheet, string certPath, Course course, EnumCertificateType.CertificateType enumCertType)
+        // construct and intialize
+        public CertificateCreator(ExcelWorksheet gradeSheet, string certPath, Course course, EnumCertificateType.CertificateType enumCertType, bool addClu)
         {
             this.course = course;
             this.certPath = certPath;
+            this.addClu = addClu;
             certificateName = course.CourseNamingScheme;
 
             // Get the Grades sheet
@@ -40,6 +44,15 @@ namespace cert_mailer
             var endDate = course.EndDate;
             var location = course.Location;
             var clp = gradesSheet.Cells[2, 12].Value;
+            var clu = "";
+            if (addClu == true) {
+                clu = ", " + clp + " PDUs";
+            }
+
+            // Make a DNS folder
+            string DNSpath = certPath + "\\DNS";
+            Directory.CreateDirectory(DNSpath);
+            var DNScounter = 0;
 
             // For all rows with data
             var rowCount = gradesSheet.Cells
@@ -54,7 +67,6 @@ namespace cert_mailer
                 string? firstName = gradesSheet.Cells[gradeSpacing, 3].Value.ToString();
                 string? lastName = gradesSheet.Cells[gradeSpacing, 5].Value.ToString();
 
-                // string templatePath = @"C:\Users\Tommy\source\repos\Wingingbump\cert_mailer\Certificate of Training - Edit.docx"; // TEMP
                 // Create the output for the docs
                 string fullName = $"{firstName} {lastName}";
                 string outputPath = Path.Combine(certPath, $"{row:00} - {fullName} - Certificate of Training - {course.CourseNamingScheme}.docx");
@@ -82,7 +94,8 @@ namespace cert_mailer
                             { "LNAME", lastName ?? "null lastname"},
                             { "COURSE", courseName },
                             { "CLPS", clp.ToString() ?? "null clp"},
-                            { "LOCATION", location },
+                            { "CLUS", clu.ToString()},
+                            { "LOCATION", location},
                             { "START_DATE", startDate.ToString("M/d/yyyy") },
                             { "END_DATE", "" }
                         };
@@ -95,8 +108,9 @@ namespace cert_mailer
                             { "LNAME", lastName ?? "null lastname"},
                             { "COURSE", courseName },
                             { "CLPS", clp.ToString() ?? "null clp"},
-                            { "LOCATION", location },
-                            { "START_DATE", startDate.ToString("M/d/yyyy") },
+                            { "CLUS", clu.ToString()},
+                            { "LOCATION", location},
+                            { "START_DATE", startDate.ToString("M/d/yyyy") + " " },
                             { "END_DATE", " - " + endDate.ToString("M/d/yyyy") }
                         };
                     }
@@ -125,10 +139,20 @@ namespace cert_mailer
                     // Save the modified document
                     document.Save();
                 }
+                // if student fail place their cert in DNS
                 string PDFOutputPath = Path.ChangeExtension(outputPath, ".pdf");
+                if (course.Students[row-1].Pass == false)
+                {
+                    DNScounter++;
+                    PDFOutputPath = Path.Combine(certPath, "DNS", Path.GetFileName(outputPath) + ".pdf");
+                }
                 ConvertToPdf(outputPath, PDFOutputPath);
                 DeleteDocx(outputPath);
             });
+            if (DNScounter == 0)
+            {
+                Directory.Delete(DNSpath, true);
+            }
         }
 
         public void ConvertToPdf(string docxPath, string pdfPath)
