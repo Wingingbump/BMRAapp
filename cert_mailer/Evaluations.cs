@@ -686,7 +686,7 @@ public class Evaluations
         // Combine path with file name
         string output = System.IO.Path.Combine(path, "Course Evaluation Summary - " + courseCode + ".xlsx");
         // Get template file path
-        string templatePath = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath + "\\Assets", "Course Evaluation Summary - Template.xlsx");
+        string templatePath = System.IO.Path.Combine(System.Windows.Forms.Application.StartupPath + "\\Assets", "Course Evaluation Summary - SF Template.xlsx");
         // Copy the template file to the output path
         System.IO.File.Copy(templatePath, output, true);
         // Open the copied file for editing
@@ -755,7 +755,7 @@ public class Evaluations
         // Fill out the response amount
         outputSheet.Cells[21, 13].Value = attendance;
         outputSheet.Cells[22, 13].Value = questions["Question1"].Sum();
-        outputSheet.Cells[23, 13].Value = comments.Count;
+        // outputSheet.Cells[23, 13].Value = comments.Count;
 
         // Header for Evaluation Summary
         string dateRange;
