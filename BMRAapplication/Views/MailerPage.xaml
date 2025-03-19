@@ -51,7 +51,7 @@
             <ComboBox x:Name="CertificatesComboBox" IsEnabled="False" Margin="10" SelectedIndex="0">
                 <ComboBoxItem Content="Default Certificate"/>
                 <ComboBoxItem Content="SBA Certificate"/>
-                <ComboBoxItem Content="NOAA Certificate"/>
+                <!-- <ComboBoxItem Content="NOAA Certificate"/> -->
                 <ComboBoxItem Content="DOIU Certificate"/>
             </ComboBox>
             <CheckBox x:Name="AddCLUCheckBox" Content="Add PDUs"/>
