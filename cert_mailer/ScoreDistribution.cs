@@ -17,7 +17,7 @@ public class ScoreDistribution
         this.gradeFile = gradeFile;
         this.attendanceFile = attendanceFile;
         // Create a dataReader so we can use it's data
-        DataRead reader = new DataRead(attendanceFile, gradeFile, "SD", false, EnumCertificateType.CertificateType.None, 0, false);
+        DataRead reader = new DataRead(attendanceFile, gradeFile, "SD", false, EnumCertificateType.CertificateType.None, 0, false, false, false);
         var courseName = reader.Course.CourseName;
         var courseId = reader.Course.CourseId;
         foreach (Student student in reader.Course.Students)

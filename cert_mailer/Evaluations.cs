@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using iText.Layout.Properties;
 using OfficeOpenXml;
 using System.Text.RegularExpressions;
+using System.Web;
 using Windows.Graphics.Printing3D;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using BottomBorder = DocumentFormat.OpenXml.Wordprocessing.BottomBorder;
@@ -159,8 +160,8 @@ public class Evaluations
         }
         if (type.Equals("DISA"))
         {
-            buffer = 5;
-            buffer2 = 5;
+            buffer = 1;
+            buffer2 = 0;
         }
 
         for (int row = 2; row <= rowCount; row++)
@@ -208,10 +209,11 @@ public class Evaluations
 
             // Comments
             string[] userResponse = new string[4];
-            userResponse[0] = evalSheet.Cells[row, 7 + buffer].Value?.ToString() ?? "";
-            userResponse[1] = evalSheet.Cells[row, 13 + buffer].Value?.ToString() ?? "";
-            userResponse[2] = evalSheet.Cells[row, 18 + buffer].Value?.ToString() ?? "";
-            userResponse[3] = evalSheet.Cells[row, 19 + buffer2].Value?.ToString() ?? ""; // Additional buffer for Default evaluations
+            userResponse[0] = HttpUtility.HtmlDecode(evalSheet.Cells[row, 7 + buffer].Value?.ToString() ?? "");
+            userResponse[1] = HttpUtility.HtmlDecode(evalSheet.Cells[row, 13 + buffer].Value?.ToString() ?? "");
+            userResponse[2] = HttpUtility.HtmlDecode(evalSheet.Cells[row, 18 + buffer].Value?.ToString() ?? "");
+            userResponse[3] = HttpUtility.HtmlDecode(evalSheet.Cells[row, 19 + buffer2].Value?.ToString() ?? ""); // Additional buffer for Default evaluations
+
 
             // Update the omitted responses to blanks
             for (int i = 0; i < userResponse.Length; i++)

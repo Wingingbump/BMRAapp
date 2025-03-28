@@ -19,7 +19,7 @@ public class DataRead
     private readonly int minimumPassingGrade;
     public Course Course { get; }
 
-    public DataRead(FileInfo roster, FileInfo grades, string certPath, bool createCerts, EnumCertificateType.CertificateType certificateType, int minimumPassingGrade, bool addClu)
+    public DataRead(FileInfo roster, FileInfo grades, string certPath, bool createCerts, EnumCertificateType.CertificateType certificateType, int minimumPassingGrade, bool addPDU, bool addCPE, bool addCEU)
     {
         // Set CertPath
         this.certPath = certPath;
@@ -77,7 +77,7 @@ public class DataRead
         // If the certs aren't created create them
         if (createCerts == true)
         {
-            CertificateCreator creator = new CertificateCreator(gradesSheet, certPath, Course, certificateType, addClu);
+            CertificateCreator creator = new CertificateCreator(gradesSheet, certPath, Course, certificateType, addPDU, addCPE, addCEU);
             // Add the cert to each student
             var numStudents = Course.Students.Count;
             for (var i = 0; i < numStudents; i++)

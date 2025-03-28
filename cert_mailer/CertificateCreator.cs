@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using DocumentFormat.OpenXml.Packaging;
 using iText.Kernel.Pdf;
 using iText.Layout.Properties;
 using OfficeOpenXml;
@@ -15,14 +16,18 @@ namespace cert_mailer
         private string certificateName;
         private string certPath;
         private ExcelWorksheet gradeSheet;
-        private bool addClu;
+        private bool addPDU;
+        private bool addCPE;
+        private bool addCEU;
 
         // construct and intialize
-        public CertificateCreator(ExcelWorksheet gradeSheet, string certPath, Course course, EnumCertificateType.CertificateType enumCertType, bool addClu)
+        public CertificateCreator(ExcelWorksheet gradeSheet, string certPath, Course course, EnumCertificateType.CertificateType enumCertType, bool addPDU, bool addCPE, bool addCEU)
         {
             this.course = course;
             this.certPath = certPath;
-            this.addClu = addClu;
+            this.addPDU = addPDU;
+            this.addCPE = addCPE;
+            this.addCEU = addCEU;
             certificateName = course.CourseNamingScheme;
 
             // Get the Grades sheet
@@ -44,10 +49,25 @@ namespace cert_mailer
             var endDate = course.EndDate;
             var location = course.Location;
             var clp = gradesSheet.Cells[2, 12].Value;
-            var clu = "";
-            if (addClu == true) {
-                clu = ", " + clp + " PDUs";
+            var pdu = "";
+            var cpe = "";
+            var ceu = "";
+            if (addPDU)
+            {
+                pdu = ", " + clp + " PDUs";
             }
+            if (addCPE)
+            {
+                cpe = ", " + clp + " CPEs";
+            }
+            if (addCEU)
+            {
+                ceu = ", " + clp + " CEUs";
+            }
+
+            // Combine them into a single string if needed
+            var certificationText = $" {pdu}{cpe}{ceu}".TrimStart(',', ' ');
+            certificationText = $" {pdu}{cpe}{ceu}";
 
             // Make a DNS folder
             string DNSpath = certPath + "\\DNS";
@@ -94,7 +114,7 @@ namespace cert_mailer
                             { "LNAME", lastName ?? "null lastname"},
                             { "COURSE", courseName },
                             { "CLPS", clp.ToString() ?? "null clp"},
-                            { "CLUS", clu.ToString()},
+                            { "CLUS", certificationText.ToString()},
                             { "LOCATION", location},
                             { "START_DATE", startDate.ToString("M/d/yyyy") },
                             { "END_DATE", "" }
@@ -108,7 +128,7 @@ namespace cert_mailer
                             { "LNAME", lastName ?? "null lastname"},
                             { "COURSE", courseName },
                             { "CLPS", clp.ToString() ?? "null clp"},
-                            { "CLUS", clu.ToString()},
+                            { "CLUS", certificationText .ToString()},
                             { "LOCATION", location},
                             { "START_DATE", startDate.ToString("M/d/yyyy") + " " },
                             { "END_DATE", " - " + endDate.ToString("M/d/yyyy") }
