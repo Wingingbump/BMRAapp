@@ -9,7 +9,7 @@
   <Identity
     Name="EOCappSetup"
     Publisher="CN=BMRA"
-    Version="1.8.0.0" />
+    Version="1.9.0.0" />
 
   <Properties>
     <DisplayName>Pack</DisplayName>

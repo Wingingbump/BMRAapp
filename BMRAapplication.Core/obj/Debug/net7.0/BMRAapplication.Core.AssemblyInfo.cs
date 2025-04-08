@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9739ffb90c76058031333b7202519ad6f9795aea")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2651eaa889840bc134d4681b497da8a122c0b3da")]
 [assembly: System.Reflection.AssemblyProductAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BMRAapplication.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
